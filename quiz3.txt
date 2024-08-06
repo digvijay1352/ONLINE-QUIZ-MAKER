@@ -1,0 +1,202 @@
+document.addEventListener('DOMContentLoaded', () => {
+    showHome();
+});
+
+function showHome() {
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2>Welcome!</h2>
+        <p>Select an option to get started.</p>
+    `;
+}
+
+function showCreateQuiz() {
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2>Create a Quiz</h2>
+        <form id="quizForm">
+            <div id="question-container">
+                <div class="question">
+                    <label>Question:</label>
+                    <input type="text" name="question[]" required>
+                    <label>Option 1:</label>
+                    <input type="text" name="option1[]" required>
+                    <label>Option 2:</label>
+                    <input type="text" name="option2[]" required>
+                    <label>Option 3:</label>
+                    <input type="text" name="option3[]" required>
+                    <label>Option 4:</label>
+                    <input type="text" name="option4[]" required>
+                    <label>Correct Answer:</label>
+                    <select name="correct[]" required>
+                        <option value="1">Option 1</option>
+                        <option value="2">Option 2</option>
+                        <option value="3">Option 3</option>
+                        <option value="4">Option 4</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" onclick="addQuestion()">Add Another Question</button>
+            <button type="submit">Create Quiz</button>
+        </form>
+    `;
+    document.getElementById('quizForm').addEventListener('submit', submitQuiz);
+}
+
+function addQuestion() {
+    const container = document.getElementById('question-container');
+    const questionCount = container.children.length + 1;
+    const questionHTML = `
+        <div class="question">
+            <h3>Question ${questionCount}</h3>
+            <label>Question:</label>
+            <input type="text" name="question[]" required>
+            <label>Option 1:</label>
+            <input type="text" name="option1[]" required>
+            <label>Option 2:</label>
+            <input type="text" name="option2[]" required>
+            <label>Option 3:</label>
+            <input type="text" name="option3[]" required>
+            <label>Option 4:</label>
+            <input type="text" name="option4[]" required>
+            <label>Correct Answer:</label>
+            <select name="correct[]" required>
+                <option value="1">Option 1</option>
+                <option value="2">Option 2</option>
+                <option value="3">Option 3</option>
+                <option value="4">Option 4</option>
+            </select>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', questionHTML);
+}
+
+function submitQuiz(event) {
+    event.preventDefault();
+    const form = event.target;
+    const data = new FormData(form);
+    const quiz = {
+        questions: []
+    };
+    for (let i = 0; i < data.getAll('question[]').length; i++) {
+        quiz.questions.push({
+            question: data.getAll('question[]')[i],
+            options: [
+                data.getAll('option1[]')[i],
+                data.getAll('option2[]')[i],
+                data.getAll('option3[]')[i],
+                data.getAll('option4[]')[i]
+            ],
+            correct: data.getAll('correct[]')[i]
+        });
+    }
+    console.log(quiz);
+    localStorage.setItem('quiz-' + Date.now(), JSON.stringify(quiz));
+    alert('Quiz created successfully!');
+    showHome();
+}
+
+function showQuizList() {
+    const mainContent = document.getElementById('main-content');
+    const quizzes = Object.keys(localStorage).filter(key => key.startsWith('quiz-'));
+    if (quizzes.length === 0) {
+        mainContent.innerHTML = `<p>No quizzes available.</p>`;
+        return;
+    }
+    mainContent.innerHTML = '<h2>Available Quizzes</h2><ul id="quiz-list"></ul>';
+    const quizList = document.getElementById('quiz-list');
+    quizzes.forEach(key => {
+        const quiz = JSON.parse(localStorage.getItem(key));
+        const quizItem = document.createElement('li');
+        quizItem.innerHTML = `<button onclick="takeQuiz('${key}')">${quiz.questions[0].question}</button>`;
+        quizList.appendChild(quizItem);
+    });
+}
+
+function takeQuiz(quizKey) {
+    const mainContent = document.getElementById('main-content');
+    const quiz = JSON.parse(localStorage.getItem(quizKey));
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    function showQuestion() {
+        if (currentQuestionIndex >= quiz.questions.length) {
+            mainContent.innerHTML = `<h2>Quiz Results</h2><p>Your score: ${score}/${quiz.questions.length}</p>`;
+            return;
+        }
+        const question = quiz.questions[currentQuestionIndex];
+        mainContent.innerHTML = `
+            <h2>Question ${currentQuestionIndex + 1}</h2>
+            <p>${question.question}</p>
+            <ul>
+                <li><button onclick="selectAnswer(1)">${question.options[0]}</button></li>
+                <li><button onclick="selectAnswer(2)">${question.options[1]}</button></li>
+                <li><button onclick="selectAnswer(3)">${question.options[2]}</button></li>
+                <li><button onclick="selectAnswer(4)">${question.options[3]}</button></li>
+            </ul>
+        `;
+    }
+
+    function selectAnswer(answer) {
+        if (answer == quiz.questions[currentQuestionIndex].correct) {
+            score++;
+        }
+        currentQuestionIndex++;
+        showQuestion();
+    }
+
+    showQuestion();
+}
+function showRegister() {
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2>Register</h2>
+        <form id="registerForm">
+            <label>Username:</label>
+            <input type="text" name="username" required>
+            <label>Password:</label>
+            <input type="password" name="password" required>
+            <button type="submit">Register</button>
+        </form>
+    `;
+    document.getElementById('registerForm').addEventListener('submit', registerUser);
+}
+
+function showLogin() {
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2>Login</h2>
+        <form id="loginForm">
+            <label>Username:</label>
+            <input type="text" name="username" required>
+            <label>Password:</label>
+            <input type="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+    `;
+    document.getElementById('loginForm').addEventListener('submit', loginUser);
+}
+
+function registerUser(event) {
+    event.preventDefault();
+    const form = event.target;
+    const username = form.username.value;
+    const password = form.password.value;
+    localStorage.setItem('user-' + username, password);
+    alert('User registered successfully!');
+    showLogin();
+}
+
+function loginUser(event) {
+    event.preventDefault();
+    const form = event.target;
+    const username = form.username.value;
+    const password = form.password.value;
+    const storedPassword = localStorage.getItem('user-' + username);
+    if (storedPassword === password) {
+        alert('Login successful!');
+        showHome();
+    } else {
+        alert('Invalid username or password!');
+    }
+}
